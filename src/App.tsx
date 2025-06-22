@@ -21,8 +21,13 @@ import {
 	Mail,
 	Phone,
 } from "lucide-react";
+import type {
+	FadeInSectionType,
+	SkillCardType,
+	TimelineItemType,
+} from "./types/type";
 
-const FadeInSection = ({ children, delay = 0 }) => {
+const FadeInSection = ({ children, delay = 0 }: FadeInSectionType) => {
 	const ref = React.useRef(null);
 	const isInView = useInView(ref, { once: true, margin: "-100px" });
 
@@ -38,7 +43,12 @@ const FadeInSection = ({ children, delay = 0 }) => {
 	);
 };
 
-const SkillCard = ({ icon: Icon, title, description, delay = 0 }) => (
+const SkillCard = ({
+	icon: Icon,
+	title,
+	description,
+	delay = 0,
+}: SkillCardType) => (
 	<FadeInSection delay={delay}>
 		<motion.div
 			whileHover={{ scale: 1.05, y: -5 }}
@@ -59,7 +69,7 @@ const TimelineItem = ({
 	description,
 	isLeft = false,
 	delay = 0,
-}) => (
+}: TimelineItemType) => (
 	<FadeInSection delay={delay}>
 		<div
 			className={`flex items-center mb-12 ${isLeft ? "flex-row-reverse" : ""}`}
@@ -92,14 +102,18 @@ function App() {
 	});
 	const [isSubmitted, setIsSubmitted] = useState(false);
 
-	const handleSubmit = (e) => {
+	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setIsSubmitted(true);
 		setTimeout(() => setIsSubmitted(false), 3000);
 		setFormData({ name: "", email: "", message: "" });
 	};
 
-	const handleInputChange = (e) => {
+	const handleInputChange = (
+		e: React.ChangeEvent<
+			HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+		>
+	) => {
 		setFormData({
 			...formData,
 			[e.target.name]: e.target.value,
@@ -119,7 +133,7 @@ function App() {
 						<div className="flex items-center">
 							<MessageCircle className="w-8 h-8 text-blue-600 mr-2" />
 							<span className="text-xl font-bold text-gray-800">
-								CommSkills
+								The Art of Communication Skills
 							</span>
 						</div>
 						<div className="hidden md:flex space-x-8 text-gray-600">
@@ -497,7 +511,7 @@ function App() {
 								</div>
 								<div>
 									<h4 className="text-xl font-semibold text-gray-800 mb-4">
-										Common Listening Barriers:
+										Communication Listening Barriers:
 									</h4>
 									<ul className="space-y-3 text-gray-600">
 										<li className="flex items-start">
@@ -711,7 +725,7 @@ function App() {
 
 						<TimelineItem
 							icon={Heart}
-							title="Find Common Ground"
+							title="Find Communication Ground"
 							description="Look for shared values, goals, or interests that both parties can agree upon. This creates a foundation of unity from which to build solutions and reminds everyone of their shared humanity."
 							isLeft={false}
 							delay={0.3}
@@ -879,7 +893,7 @@ function App() {
 
 								<div className="bg-white p-6 rounded-2xl">
 									<h5 className="font-bold text-gray-800 mb-3">
-										Common Relationship Communication Mistakes:
+										Communication Relationship Communication Mistakes:
 									</h5>
 									<ul className="text-sm text-gray-600 space-y-2">
 										<li>
@@ -1235,7 +1249,7 @@ function App() {
 												name="message"
 												value={formData.message}
 												onChange={handleInputChange}
-												rows="5"
+												rows={5}
 												className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
 												placeholder="Share your communication challenges, successes, or questions..."
 												required
