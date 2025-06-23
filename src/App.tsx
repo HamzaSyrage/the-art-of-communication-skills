@@ -499,7 +499,7 @@ const VideoSection = () => {
 								{activeVideo === video.id ? (
 									<button
 										onClick={() => setActiveVideo(null)}
-										className="w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white py-3 px-6 rounded-xl font-medium hover:from-gray-600 hover:to-gray-700 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105"
+										className="w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white py-3 px-6 rounded-xl font-medium hover:from-gray-600 hover:to-gray-700 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 cursor-pointer"
 									>
 										<X size={16} />
 										Close Video
@@ -507,7 +507,7 @@ const VideoSection = () => {
 								) : (
 									<button
 										onClick={() => setActiveVideo(video.id)}
-										className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105"
+										className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 cursor-pointer"
 									>
 										<Play size={16} />
 										Watch Video
