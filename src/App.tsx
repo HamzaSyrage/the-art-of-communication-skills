@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { motion, useInView } from "framer-motion";
 import {
 	MessageCircle,
@@ -17,15 +16,511 @@ import {
 	Handshake,
 	Target,
 	Star,
-	User,
 	Mail,
 	Phone,
+	Clock,
+	Play,
+	X,
+	RotateCcw,
+	Award,
+	AlertCircle,
+	Check,
 } from "lucide-react";
-import type {
-	FadeInSectionType,
-	SkillCardType,
-	TimelineItemType,
-} from "./types/type";
+import React, { useState } from "react";
+
+// Types
+interface FadeInSectionType {
+	children: React.ReactNode;
+	delay?: number;
+}
+
+interface QuizQuestion {
+	id: number;
+	question: string;
+	options: string[];
+	correctAnswer: number;
+	explanation: string;
+}
+
+interface SkillCardType {
+	icon: React.ElementType;
+	title: string;
+	description: string;
+	delay?: number;
+}
+
+interface TimelineItemType {
+	icon: React.ElementType;
+	title: string;
+	description: string;
+	isLeft?: boolean;
+	delay?: number;
+}
+
+// Quiz questions
+const quizQuestions: QuizQuestion[] = [
+	{
+		id: 1,
+		question: "What year was the first iPhone launched by Steve Jobs?",
+		options: ["2006", "2007", "2008", "2009"],
+		correctAnswer: 1,
+		explanation:
+			"The first iPhone was launched by Steve Jobs on January 9, 2007, at the Macworld Conference & Expo.",
+	},
+	{
+		id: 2,
+		question:
+			"Where did Martin Luther King Jr. deliver his 'I Have a Dream' speech?",
+		options: [
+			"White House",
+			"Lincoln Memorial",
+			"Capitol Building",
+			"Supreme Court",
+		],
+		correctAnswer: 1,
+		explanation:
+			"The speech was delivered on August 28, 1963, at the Lincoln Memorial in Washington, D.C., during the March on Washington.",
+	},
+	{
+		id: 3,
+		question: "What was revolutionary about the iPhone's interface?",
+		options: [
+			"Physical keyboard",
+			"Stylus input",
+			"Multi-touch screen",
+			"Voice control",
+		],
+		correctAnswer: 2,
+		explanation:
+			"The iPhone introduced the multi-touch interface, eliminating the need for a physical keyboard or stylus.",
+	},
+	{
+		id: 4,
+		question: "How many people attended the March on Washington?",
+		options: ["100,000", "150,000", "200,000", "250,000"],
+		correctAnswer: 3,
+		explanation:
+			"Approximately 250,000 people attended the March on Washington for Jobs and Freedom.",
+	},
+	{
+		id: 5,
+		question: "What did Steve Jobs call the iPhone during its launch?",
+		options: [
+			"Smart device",
+			"Revolutionary product",
+			"Game changer",
+			"Magic device",
+		],
+		correctAnswer: 1,
+		explanation:
+			"Steve Jobs called it a 'revolutionary and magical product that is literally five years ahead of any other mobile phone.'",
+	},
+	{
+		id: 6,
+		question: "What was the main theme of MLK's 'I Have a Dream' speech?",
+		options: [
+			"Economic equality",
+			"Racial equality and unity",
+			"Political reform",
+			"Educational rights",
+		],
+		correctAnswer: 1,
+		explanation:
+			"The speech focused on racial equality, civil rights, and his vision of a united America where people are judged by character, not color.",
+	},
+	{
+		id: 7,
+		question: "How much did the first iPhone cost?",
+		options: ["$399", "$499", "$599", "$699"],
+		correctAnswer: 2,
+		explanation:
+			"The original iPhone was priced at $499 for the 4GB model and $599 for the 8GB model.",
+	},
+	{
+		id: 8,
+		question: "What organization did MLK help found?",
+		options: ["NAACP", "SCLC", "SNCC", "CORE"],
+		correctAnswer: 1,
+		explanation:
+			"Martin Luther King Jr. was a founding member and president of the Southern Christian Leadership Conference (SCLC).",
+	},
+	{
+		id: 9,
+		question: "What three devices did Jobs say the iPhone combined?",
+		options: [
+			"Phone, iPod, Internet device",
+			"Phone, Camera, Computer",
+			"Phone, GPS, Music player",
+			"Phone, Email, Games",
+		],
+		correctAnswer: 0,
+		explanation:
+			"Jobs said the iPhone was 'three products in one': a widescreen iPod with touch controls, a revolutionary mobile phone, and a breakthrough internet communications device.",
+	},
+	{
+		id: 10,
+		question: "In what year did MLK receive the Nobel Peace Prize?",
+		options: ["1963", "1964", "1965", "1966"],
+		correctAnswer: 1,
+		explanation:
+			"Martin Luther King Jr. received the Nobel Peace Prize in 1964 at age 35, making him the youngest recipient at that time.",
+	},
+];
+
+// Quiz Modal Component
+const QuizModal = ({
+	isOpen,
+	onClose,
+}: {
+	isOpen: boolean;
+	onClose: () => void;
+}) => {
+	const [currentQuestion, setCurrentQuestion] = useState(0);
+	const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+	const [showFeedback, setShowFeedback] = useState(false);
+	const [score, setScore] = useState(0);
+	const [answers, setAnswers] = useState<number[]>([]);
+	const [isCompleted, setIsCompleted] = useState(false);
+
+	const resetQuiz = () => {
+		setCurrentQuestion(0);
+		setSelectedAnswer(null);
+		setShowFeedback(false);
+		setScore(0);
+		setAnswers([]);
+		setIsCompleted(false);
+	};
+
+	const handleAnswerSelect = (answerIndex: number) => {
+		if (showFeedback) return;
+		setSelectedAnswer(answerIndex);
+		setShowFeedback(true);
+
+		const newAnswers = [...answers, answerIndex];
+		setAnswers(newAnswers);
+
+		if (answerIndex === quizQuestions[currentQuestion].correctAnswer) {
+			setScore(score + 1);
+		}
+	};
+
+	const handleNextQuestion = () => {
+		if (currentQuestion < quizQuestions.length - 1) {
+			setCurrentQuestion(currentQuestion + 1);
+			setSelectedAnswer(null);
+			setShowFeedback(false);
+		} else {
+			setIsCompleted(true);
+		}
+	};
+
+	const getScoreColor = () => {
+		const percentage = (score / quizQuestions.length) * 100;
+		if (percentage >= 80) return "text-green-600";
+		if (percentage >= 60) return "text-yellow-600";
+		return "text-red-600";
+	};
+
+	const getScoreMessage = () => {
+		const percentage = (score / quizQuestions.length) * 100;
+		if (percentage >= 90) return "Outstanding! You're a history expert! 🌟";
+		if (percentage >= 80) return "Excellent work! Great knowledge! 🎉";
+		if (percentage >= 70) return "Good job! Keep learning! 👍";
+		if (percentage >= 60) return "Not bad! Room for improvement! 📚";
+		return "Keep studying! You'll do better next time! 💪";
+	};
+
+	if (!isOpen) return null;
+
+	return (
+		<div
+			className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+			onClick={onClose}
+		>
+			<div
+				className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100"
+				onClick={(e) => e.stopPropagation()}
+			>
+				{!isCompleted ? (
+					<div className="p-8">
+						<div className="flex justify-between items-center mb-6">
+							<div className="flex items-center gap-4">
+								<div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full font-bold">
+									Question {currentQuestion + 1}/{quizQuestions.length}
+								</div>
+								<div className="text-gray-600">
+									Score: {score}/{currentQuestion + (showFeedback ? 1 : 0)}
+								</div>
+							</div>
+							<button
+								onClick={onClose}
+								className="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-gray-100 rounded-full"
+							>
+								<X size={24} />
+							</button>
+						</div>
+
+						<div key={currentQuestion} className="transition-all duration-300">
+							<h3 className="text-2xl font-bold text-gray-800 mb-6 leading-tight">
+								{quizQuestions[currentQuestion].question}
+							</h3>
+
+							<div className="space-y-3 mb-6">
+								{quizQuestions[currentQuestion].options.map((option, index) => {
+									const isSelected = selectedAnswer === index;
+									const isCorrect =
+										index === quizQuestions[currentQuestion].correctAnswer;
+									const showCorrectAnswer = showFeedback && isCorrect;
+									const showWrongAnswer =
+										showFeedback && isSelected && !isCorrect;
+
+									return (
+										<button
+											key={index}
+											onClick={() => handleAnswerSelect(index)}
+											disabled={showFeedback}
+											className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
+												showCorrectAnswer
+													? "border-green-500 bg-green-50 text-green-800"
+													: showWrongAnswer
+													? "border-red-500 bg-red-50 text-red-800"
+													: isSelected
+													? "border-blue-500 bg-blue-50 text-blue-800"
+													: "border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-blue-50"
+											}`}
+										>
+											<div className="flex items-center gap-3">
+												<div
+													className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+														showCorrectAnswer
+															? "border-green-500 bg-green-500 text-white"
+															: showWrongAnswer
+															? "border-red-500 bg-red-500 text-white"
+															: isSelected
+															? "border-blue-500 bg-blue-500 text-white"
+															: "border-gray-300"
+													}`}
+												>
+													{showCorrectAnswer ? (
+														<Check size={14} />
+													) : showWrongAnswer ? (
+														<X size={14} />
+													) : (
+														String.fromCharCode(65 + index)
+													)}
+												</div>
+												<span className="font-medium">{option}</span>
+											</div>
+										</button>
+									);
+								})}
+							</div>
+
+							{showFeedback && (
+								<div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 mb-6 transition-all duration-300">
+									<div className="flex items-start gap-3">
+										<AlertCircle className="text-blue-600 mt-1" size={20} />
+										<div>
+											<h4 className="font-bold text-blue-800 mb-2">
+												{selectedAnswer ===
+												quizQuestions[currentQuestion].correctAnswer
+													? "✅ Correct!"
+													: "❌ Incorrect"}
+											</h4>
+											<p className="text-blue-700 leading-relaxed">
+												{quizQuestions[currentQuestion].explanation}
+											</p>
+										</div>
+									</div>
+								</div>
+							)}
+
+							{showFeedback && (
+								<button
+									onClick={handleNextQuestion}
+									className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 hover:scale-105"
+								>
+									{currentQuestion < quizQuestions.length - 1
+										? "Next Question"
+										: "Show Results"}
+								</button>
+							)}
+						</div>
+					</div>
+				) : (
+					<div className="p-8 text-center">
+						<div className="mb-6">
+							<div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+								<Award className="w-8 h-8 text-white" />
+							</div>
+							<h2 className="text-3xl font-bold text-gray-800 mb-2">
+								Quiz Completed!
+							</h2>
+							<p className="text-gray-600 text-lg">{getScoreMessage()}</p>
+						</div>
+
+						<div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-6 border border-gray-100">
+							<div className={`text-4xl font-bold mb-2 ${getScoreColor()}`}>
+								{score}/{quizQuestions.length}
+							</div>
+							<div className="text-gray-600 mb-4">
+								{Math.round((score / quizQuestions.length) * 100)}% Correct
+							</div>
+							<div className="w-full bg-gray-200 rounded-full h-3">
+								<div
+									className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-1500 ease-out"
+									style={{ width: `${(score / quizQuestions.length) * 100}%` }}
+								/>
+							</div>
+						</div>
+
+						<div className="flex gap-4">
+							<button
+								onClick={() => {
+									resetQuiz();
+								}}
+								className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105"
+							>
+								<RotateCcw size={20} />
+								Try Again
+							</button>
+							<button
+								onClick={onClose}
+								className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white py-3 px-6 rounded-xl font-bold hover:from-gray-600 hover:to-gray-700 transition-all duration-300 hover:scale-105"
+							>
+								Close
+							</button>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	);
+};
+
+// VideoSection
+const VideoSection = () => {
+	const [activeVideo, setActiveVideo] = useState<string | null>(null);
+
+	const videos = [
+		{
+			id: "jobs",
+			title: "Steve Jobs iPhone Launch",
+			description:
+				"Experience the historic moment when Steve Jobs introduced the revolutionary iPhone to the world, changing technology forever.",
+			url: "https://youtu.be/MnrJzXM7a6o?si=jU48BfdoAn0Stazn",
+			embedId: "MnrJzXM7a6o",
+			year: "2007",
+			duration: "9:42",
+		},
+		{
+			id: "mlk",
+			title: "Martin Luther King Jr. - I Have a Dream",
+			description:
+				"Witness one of the most powerful speeches in history that inspired millions and changed the course of civil rights.",
+			url: "https://youtu.be/vP4iY1TtS3s?feature=shared",
+			embedId: "vP4iY1TtS3s",
+			year: "1963",
+			duration: "17:28",
+		},
+	];
+
+	return (
+		<section className="py-20 bg-gradient-to-br from-white to-gray-200">
+			<div className="max-w-7xl mx-auto px-4">
+				<div className="text-center mb-16">
+					<h2 className="text-5xl font-bold text-gray-800 mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text">
+						Historic Moments
+					</h2>
+					<p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+						Explore pivotal moments in history that shaped our world. From
+						technological breakthroughs to social movements, these speeches
+						continue to inspire generations.
+					</p>
+				</div>
+
+				<div className="grid md:grid-cols-2 gap-8">
+					{videos.map((video) => (
+						<div
+							key={video.id}
+							className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden"
+						>
+							<div className="p-8">
+								<div className="flex items-center justify-between mb-4">
+									<div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+										<Play className="w-6 h-6 text-white" />
+									</div>
+									<div className="flex items-center gap-4 text-sm text-gray-500">
+										<div className="flex items-center gap-1">
+											<Clock className="w-4 h-4" />
+											{video.duration}
+										</div>
+										<div>{video.year}</div>
+									</div>
+								</div>
+
+								<h3 className="text-2xl font-bold text-gray-800 mb-4 hover:scale-105 transition-transform cursor-pointer">
+									{video.title}
+								</h3>
+								<p className="text-gray-600 mb-6 leading-relaxed">
+									{video.description}
+								</p>
+
+								{activeVideo === video.id ? (
+									<div className="aspect-video rounded-lg overflow-hidden shadow-lg mb-4 bg-black">
+										<iframe
+											width="100%"
+											height="100%"
+											src={`https://www.youtube.com/embed/${video.embedId}?autoplay=1&rel=0&modestbranding=1`}
+											title={video.title}
+											className="w-full h-full"
+										/>
+									</div>
+								) : (
+									<div
+										className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center mb-4 cursor-pointer border border-gray-200 hover:scale-105 transition-transform"
+										onClick={() => setActiveVideo(video.id)}
+									>
+										<div className="text-center">
+											<div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+												<Play
+													size={24}
+													fill="white"
+													className="text-white ml-1"
+												/>
+											</div>
+											<p className="text-gray-600 font-medium">
+												Click to Play Video
+											</p>
+										</div>
+									</div>
+								)}
+
+								{activeVideo === video.id ? (
+									<button
+										onClick={() => setActiveVideo(null)}
+										className="w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white py-3 px-6 rounded-xl font-medium hover:from-gray-600 hover:to-gray-700 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105"
+									>
+										<X size={16} />
+										Close Video
+									</button>
+								) : (
+									<button
+										onClick={() => setActiveVideo(video.id)}
+										className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105"
+									>
+										<Play size={16} />
+										Watch Video
+									</button>
+								)}
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+		</section>
+	);
+};
 
 const FadeInSection = ({ children, delay = 0 }: FadeInSectionType) => {
 	const ref = React.useRef(null);
@@ -72,7 +567,9 @@ const TimelineItem = ({
 }: TimelineItemType) => (
 	<FadeInSection delay={delay}>
 		<div
-			className={`flex items-center mb-12 ${isLeft ? "flex-row-reverse" : ""}`}
+			className={`flex z-10 items-center mb-12 ${
+				isLeft ? "flex-row-reverse" : ""
+			}`}
 		>
 			<div className="flex-1">
 				<div
@@ -119,6 +616,7 @@ function App() {
 			[e.target.name]: e.target.value,
 		});
 	};
+	const [showQuiz, setShowQuiz] = useState(false);
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -184,13 +682,6 @@ function App() {
 								opportunities. Transform your personal and professional
 								relationships through the power of effective communication.
 							</p>
-							<motion.button
-								whileHover={{ scale: 1.05 }}
-								whileTap={{ scale: 0.95 }}
-								className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center mx-auto"
-							>
-								Start Your Journey <ArrowRight className="ml-2 w-5 h-5" />
-							</motion.button>
 						</motion.div>
 					</div>
 				</div>
@@ -705,7 +1196,7 @@ function App() {
 					</FadeInSection>
 
 					<div className="relative">
-						<div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-300 to-purple-300 transform -translate-x-1/2 hidden lg:block"></div>
+						<div className="absolute z-[-10] left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-300 to-purple-300 transform -translate-x-1/2 hidden lg:block"></div>
 
 						<TimelineItem
 							icon={Handshake}
@@ -1021,6 +1512,9 @@ function App() {
 					</FadeInSection>
 				</div>
 			</section>
+			<div className="py-20 bg-white">
+				<VideoSection />
+			</div>
 
 			{/* Tips to Improve Communication */}
 			<section id="skills" className="py-20 px-4 sm:px-6 lg:px-8">
@@ -1280,7 +1774,7 @@ function App() {
 											<div>
 												<div className="font-semibold text-gray-800">Email</div>
 												<div className="text-gray-600">
-													hello@commskills.com
+													hamzasyrage@gmail.com
 												</div>
 											</div>
 										</div>
@@ -1288,18 +1782,7 @@ function App() {
 											<Phone className="w-6 h-6 text-blue-600 mr-4" />
 											<div>
 												<div className="font-semibold text-gray-800">Phone</div>
-												<div className="text-gray-600">+1 (555) 123-4567</div>
-											</div>
-										</div>
-										<div className="flex items-center">
-											<User className="w-6 h-6 text-blue-600 mr-4" />
-											<div>
-												<div className="font-semibold text-gray-800">
-													Support
-												</div>
-												<div className="text-gray-600">
-													Available Mon-Fri, 9AM-5PM EST
-												</div>
+												<div className="text-gray-600">+963 941 845 197</div>
 											</div>
 										</div>
 									</div>
@@ -1335,14 +1818,31 @@ function App() {
 					</div>
 				</div>
 			</section>
-
+			<QuizModal
+				isOpen={showQuiz}
+				onClose={() => {
+					setShowQuiz(false);
+				}}
+			/>
+			<motion.button
+				whileHover={{ scale: 1.05 }}
+				whileTap={{ scale: 0.95 }}
+				onClick={() => {
+					setShowQuiz(true);
+				}}
+				className="mx-auto my-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center cursor-pointer"
+			>
+				Take a Quiz <ArrowRight className="ml-2 w-5 h-5" />
+			</motion.button>
 			{/* Footer */}
 			<footer className="bg-gray-800 text-white py-12 px-4 sm:px-6 lg:px-8">
 				<div className="max-w-7xl mx-auto">
 					<div className="text-center">
 						<div className="flex items-center justify-center mb-6">
 							<MessageCircle className="w-8 h-8 text-blue-400 mr-2" />
-							<span className="text-2xl font-bold">CommSkills</span>
+							<span className="text-2xl font-bold">
+								The Art of Communication Skills
+							</span>
 						</div>
 						<p className="text-gray-400 mb-6 max-w-2xl mx-auto">
 							Empowering individuals and organizations to build stronger
