@@ -1,19 +1,27 @@
-export type FadeInSectionType = {
+export interface FadeInSectionType {
 	children: React.ReactNode;
 	delay?: number;
-};
+}
 
-export type SkillCardType = {
+export interface QuizQuestion {
+	id: number;
+	question: string;
+	options: string[];
+	correctAnswer: number;
+	explanation: string;
+}
+
+export interface SkillCardType {
 	icon: React.ElementType;
 	title: string;
 	description: string;
 	delay?: number;
-};
+}
 
-export type TimelineItemType = {
+export interface TimelineItemType {
 	icon: React.ElementType;
 	title: string;
 	description: string;
 	isLeft?: boolean;
 	delay?: number;
-};
+}
